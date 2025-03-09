@@ -12,41 +12,48 @@ export default defineConfig({
             outDir: 'dist/sdk/types'
         }),
     ],
+    define: {
+        // Polyfill for process.env in browser
+        'process.env': {
+            NODE_ENV: JSON.stringify('production'),
+        },
+        // For older libs that check process.env.NODE_ENV
+        'process.env.NODE_ENV': JSON.stringify('production'),
+    },
     build: {
         lib: {
             // The entry point for your SDK
             entry: resolve(__dirname, 'src/sdk/index.ts'),
-            name: 'AntDesignXSDK',
+            name: 'AntDesignXChatSDK',
             // Generate the formats
             formats: ['es', 'umd'],
             fileName: (format) => `index.${format}.js`,
         },
         rollupOptions: {
-            // Externalize peer dependencies
-            external: [
-                'react',
-                'react-dom',
-                'antd',
-                '@ant-design/icons',
-                '@ant-design/x',
-                '@ant-design/cssinjs',
-                'antd-style'
-            ],
+            // Include all dependencies in the bundle instead of externalizing them
+            external: [],
             output: {
-                // Global variables for UMD build
-                globals: {
-                    react: 'React',
-                    'react-dom': 'ReactDOM',
-                    antd: 'antd',
-                    '@ant-design/icons': 'icons',
-                    '@ant-design/x': 'AntDesignX',
-                    '@ant-design/cssinjs': 'AntDesignCSSInJS',
-                    'antd-style': 'antdStyle'
-                },
+                // Optimize chunk splitting
+                chunkFileNames: 'chunks/[name]-[hash].js',
+                manualChunks: undefined,
             },
         },
         outDir: 'dist/sdk',
         emptyOutDir: true,
         sourcemap: true,
+        // Minification options
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: false,
+                drop_debugger: true
+            }
+        }
     },
+    // Resolve paths
+    resolve: {
+        alias: {
+            '@': resolve(__dirname, 'src')
+        }
+    }
 });

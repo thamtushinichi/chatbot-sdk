@@ -1,26 +1,40 @@
-# Ant Design X Chat SDK
+# Ant Design X Chat SDK (Fully Bundled)
 
-This SDK allows you to easily integrate the Ant Design X Chat component into any web application using ES modules.
+A fully bundled chatbot SDK based on Ant Design X that can be easily integrated into any web application without requiring external dependencies.
+
+## Features
+
+- **Zero External Dependencies**: All dependencies (React, Ant Design, etc.) are bundled into the SDK
+- **Simple Integration**: Just include the script and start using it
+- **Customizable**: Supports custom themes, logo, and API integration
+- **TypeScript Support**: Includes TypeScript definitions
 
 ## Building the SDK
 
 1. Install dependencies:
    ```bash
+   npm install
+   # or
    pnpm install
    ```
 
 2. Build the SDK:
    ```bash
+   npm run build:sdk
+   # or
    pnpm build:sdk
    ```
 
    This will create the SDK files in the `dist/sdk` directory:
+   - `index.umd.js` - Universal Module Definition (UMD) version
    - `index.es.js` - ES Module version
    - `types/` - TypeScript type definitions
 
-## Using the SDK in an HTML Page
+## Using the SDK
 
-Since some of the required dependencies don't have UMD builds available on CDNs, we'll use ES modules instead:
+### Direct HTML Integration
+
+Simply include the UMD version in your HTML file:
 
 ```html
 <!DOCTYPE html>
@@ -28,27 +42,7 @@ Since some of the required dependencies don't have UMD builds available on CDNs,
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ant Design X SDK Demo</title>
-  
-  <!-- Define module imports -->
-  <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18",
-        "react-dom": "https://esm.sh/react-dom@18",
-        "react-dom/client": "https://esm.sh/react-dom@18/client",
-        "antd": "https://esm.sh/antd@5",
-        "@ant-design/icons": "https://esm.sh/@ant-design/icons@5",
-        "@ant-design/cssinjs": "https://esm.sh/@ant-design/cssinjs@1.23.0",
-        "antd-style": "https://esm.sh/antd-style@3.7.1",
-        "@ant-design/x": "https://esm.sh/@ant-design/x@1.0.5"
-      }
-    }
-  </script>
-  
-  <!-- Ant Design CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/reset.css">
-  
+  <title>Chat Demo</title>
   <style>
     #chat-container {
       width: 100%;
@@ -59,131 +53,115 @@ Since some of the required dependencies don't have UMD builds available on CDNs,
 <body>
   <div id="chat-container"></div>
   
-  <script type="module">
-    import React from 'react';
-    import ReactDOM from 'react-dom/client';
-    import { ConfigProvider } from 'antd';
-    import { StyleProvider, ThemeProvider } from 'antd-style';
-    import Independent from './path/to/sdk/index.es.js';
-    
-    // Create a React root
-    const root = ReactDOM.createRoot(document.getElementById('chat-container'));
-    
-    // Render with all required providers
-    root.render(
-      React.createElement(
-        React.StrictMode,
-        null,
-        React.createElement(
-          ConfigProvider,
-          {
-            theme: {
-              token: {
-                colorPrimary: '#1677ff',
-                borderRadius: 8
-              }
-            }
-          },
-          React.createElement(
-            StyleProvider,
-            { prefix: 'antd-x-sdk' },
-            React.createElement(
-              ThemeProvider,
-              null,
-              React.createElement(Independent, {
-                logoSrc: 'https://example.com/logo.png',
-                logoText: 'My Chat App',
-                onRequestOverride: function(message, onSuccess) {
-                  // Call your API here
-                  fetch('https://your-api.com/chat', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message })
-                  })
-                    .then(response => response.text())
-                    .then(response => {
-                      onSuccess(response);
-                    });
-                }
-              })
-            )
-          )
-        )
-      )
-    );
+  <!-- Include the bundled SDK -->
+  <script src="path/to/index.umd.js"></script>
+  
+  <script>
+    // Initialize the chat when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      const { renderIndependent } = window.AntDesignXChatSDK;
+      
+      const cleanup = renderIndependent({
+        container: '#chat-container',
+        logoSrc: 'https://example.com/logo.png',
+        logoText: 'My Chat App',
+        theme: {
+          colorPrimary: '#1677ff',
+          borderRadius: 8
+        },
+        onRequestOverride: function(message, onSuccess) {
+          // Call your API here
+          fetch('https://your-api.com/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+          })
+            .then(response => response.text())
+            .then(response => {
+              onSuccess(response);
+            });
+        }
+      });
+      
+      // Cleanup function to unmount the component when needed
+      // window.unmountChat = cleanup;
+    });
   </script>
 </body>
 </html>
 ```
 
+### Using with a Module Bundler (Webpack, Vite, etc.)
+
+If you're using a module bundler, you can import the ES module version:
+
+```javascript
+import { renderIndependent } from 'path/to/sdk';
+
+// Initialize the chat
+const cleanup = renderIndependent({
+  container: '#chat-container',
+  logoText: 'My Chat App',
+  onRequestOverride: (message, onSuccess) => {
+    // Your API logic here
+    onSuccess(`Response to: ${message}`);
+  }
+});
+
+// Call cleanup() when you want to unmount the component
+```
+
 ## API Reference
 
-### Independent Component Props
+### renderIndependent Options
 
 | Property | Type | Description |
 |----------|------|-------------|
+| `container` | `HTMLElement\|string` | Element or CSS selector where the chat will be rendered |
 | `logoSrc` | `string` | (Optional) URL for the logo image |
 | `logoText` | `string` | (Optional) Text to display next to the logo |
+| `theme` | `object` | (Optional) Theme customization |
+| `theme.colorPrimary` | `string` | Primary color (hex code) |
+| `theme.borderRadius` | `number` | Border radius for UI elements |
 | `onRequestOverride` | `function` | (Optional) Function to handle chat requests. Takes `(message, onSuccess)` parameters |
+| `onError` | `function` | (Optional) Function to handle rendering errors |
 
-## Using with a Bundler (Webpack, Vite, etc.)
+### Return Value
 
-If you're integrating the SDK into a bundled application, you can import it directly:
+The `renderIndependent` function returns a cleanup function that you can call to unmount the component.
 
-```jsx
-import React from 'react';
-import { ConfigProvider } from 'antd';
-import { StyleProvider, ThemeProvider } from 'antd-style';
-import Independent from 'path/to/sdk';
+## Browser Support
 
-function App() {
-  return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: '#1677ff',
-          borderRadius: 8
-        }
-      }}
-    >
-      <StyleProvider prefix="antd-x-sdk">
-        <ThemeProvider>
-          <Independent 
-            logoText="My Chat App"
-            onRequestOverride={(message, onSuccess) => {
-              // Your API logic here
-              onSuccess(`Response to: ${message}`);
-            }}
-          />
-        </ThemeProvider>
-      </StyleProvider>
-    </ConfigProvider>
-  );
-}
-```
+The SDK supports all modern browsers:
 
-## Hosting the SDK
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
 
-After building, you can host the SDK files on any static file server. For production use, you should:
+## Hosting Recommendations
 
-1. Host the files on a CDN
-2. Set proper cache headers
-3. Consider using versioning in your URLs
+Since the SDK is fully bundled:
+
+1. Host the build output (`dist/sdk/index.umd.js`) on your CDN or static file server
+2. Set appropriate cache headers
+3. Consider versioning in your URLs (e.g., `/assets/chat-sdk/v1.0.0/index.umd.js`)
 
 ## Development
 
 To run the demo locally:
 
-1. Build the SDK:
+1. Start the development server:
    ```bash
-   pnpm build:sdk
-   ```
-
-2. Start the development server:
-   ```bash
+   npm run dev
+   # or
    pnpm dev
    ```
 
-3. Open http://localhost:5173/demo-fixed.html in your browser
+2. Open http://localhost:5173 in your browser
+
+## License
+
+MIT
